@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CipherForge — Secure OpenPGP Trust Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161c;
+    --panel:#1b1e26;
+    --panel-raised:#20232c;
+    --border:#2b2f3a;
+    --border-soft:#242730;
+    --text:#edeff3;
+    --text-dim:#8b93a3;
+    --text-faint:#5b6273;
+    --accent:#ef9f5f;
+    --accent-soft:#3a3122;
+    --accent-text:#1a1206;
+    --success:#5fbf8f;
+    --success-soft:#1c2b24;
+    --danger:#e2635a;
+    --danger-soft:#2e1e1c;
+    --sans:'Space Grotesk', -apple-system, sans-serif;
+    --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{background:var(--accent-soft);color:var(--accent);}
+
+  a{color:var(--accent);}
+
+  button{font-family:var(--sans);}
+
+  /* ---------- Library status banner ---------- */
+  .lib-banner{
+    display:flex;align-items:center;gap:10px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    border-bottom:1px solid var(--border);
+    padding:10px 18px;
+    font-size:13px;
+    position:sticky;top:0;z-index:40;
+  }
+  .lib-banner svg{width:16px;height:16px;flex:0 0 16px;}
+  .lib-banner.error{background:var(--danger-soft);color:#f0b3ad;}
+  .lib-banner.error svg{color:var(--danger);}
+  .lib-banner .btn{margin-left:auto;padding:6px 14px;font-size:12.5px;flex:0 0 auto;}
+
+  /* ---------- Layout ---------- */
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+  .rail{
+    width:236px;
+    flex:0 0 236px;
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:22px 14px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:6px 10px 22px 10px;
+  }
+  .brand-mark{
+    width:30px;height:30px;flex:0 0 30px;
+    border-radius:8px;
+    background:linear-gradient(155deg,#2a2d36,#1a1c22);
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .brand-mark svg{width:16px;height:16px;color:var(--accent);}
+  .brand-name{font-weight:600;font-size:16.5px;letter-spacing:-0.01em;}
+  .brand-sub{font-size:10.5px;color:var(--text-faint);margin-top:-2px;}
+
+  nav{display:flex;flex-direction:column;gap:2px;margin-top:6px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    border:none;
+    background:transparent;
+    color:var(--text-dim);
+    font-size:14px;
+    font-weight:500;
+    text-align:left;
+    cursor:pointer;
+    transition:background .12s ease, color .12s ease;
+  }
+  .nav-item svg{width:17px;height:17px;flex:0 0 17px;opacity:.85;}
+  .nav-item:hover{background:var(--panel-raised);color:var(--text);}
+  .nav-item.active{background:var(--accent-soft);color:var(--accent);}
+  .nav-item.active svg{opacity:1;}
+
+  .nav-count{
+    margin-left:auto;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+    background:var(--panel-raised);
+    border:1px solid var(--border-soft);
+    border-radius:20px;
+    padding:1px 7px;
+  }
+  .nav-item.active .nav-count{color:var(--accent);border-color:var(--border);}
+
+  .rail-footer{
+    margin-top:auto;
+    padding:12px 10px 4px 10px;
+    border-top:1px solid var(--border-soft);
+  }
+  .rail-footer p{
+    font-size:11.5px;
+    line-height:1.5;
+    color:var(--text-faint);
+    margin:10px 0 0 0;
+  }
+  .rail-footer .dot{
+    display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--success);margin-right:7px;
+    box-shadow:0 0 0 3px var(--success-soft);
+  }
+  .rail-footer .status-line{font-size:12px;color:var(--text-dim);display:flex;align-items:center;}
+
+  main{
+    flex:1;
+    min-width:0;
+    padding:44px 40px 80px 40px;
+  }
+  .view{display:none;max-width:700px;margin:0 auto;}
+  .view.active{display:block;animation:rise .25s ease;}
+  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .view-head{margin-bottom:30px;}
+  .eyebrow-free{font-size:13px;color:var(--text-dim);margin:0 0 6px 0;}
+  h1{font-size:26px;font-weight:600;letter-spacing:-0.015em;margin:0 0 8px 0;}
+  .view-desc{font-size:14.5px;line-height:1.6;color:var(--text-dim);margin:0;max-width:56ch;}
+
+  /* ---------- Panels / cards ---------- */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px 22px 24px 22px;
+    margin-bottom:20px;
+  }
+  .panel-title{
+    font-size:14px;font-weight:600;margin:0 0 16px 0;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .section-label{
+    font-size:12px;color:var(--text-faint);
+    text-transform:none;
+    margin:0 0 14px 0;
+    font-weight:500;
+  }
+
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-weight:500;
+  }
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  input[type="text"],input[type="email"],input[type="password"],textarea,select{
+    width:100%;
+    background:var(--panel-raised);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:7px;
+    padding:10px 12px;
+    font-size:13.5px;
+    font-family:var(--sans);
+    outline:none;
+    transition:border-color .12s ease;
+  }
+  select{cursor:pointer;}
+  input::placeholder,textarea::placeholder{color:var(--text-faint);}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);}
+  input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{
+    outline:2px solid var(--accent);outline-offset:1px;
+  }
+  textarea{resize:vertical;font-family:var(--mono);line-height:1.55;font-size:12.5px;}
+  .hint{font-size:11.5px;color:var(--text-faint);margin-top:5px;line-height:1.5;}
+
+  .toggle-link{
+    background:none;border:none;color:var(--accent);font-size:12.5px;cursor:pointer;padding:0;
+    font-family:var(--sans);font-weight:500;
+  }
+  .toggle-link:hover{text-decoration:underline;}
+
+  button.btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border-radius:7px;
+    padding:10px 18px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:filter .12s ease, background .12s ease;
+  }
+  button.btn:disabled{opacity:.55;cursor:not-allowed;}
+  .btn-primary{background:var(--accent);color:var(--accent-text);}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.08);}
+  .btn-ghost{background:var(--panel-raised);color:var(--text);border-color:var(--border);}
+  .btn-ghost:hover:not(:disabled){background:#262a34;}
+  .btn-danger-ghost{background:transparent;color:var(--danger);border-color:var(--border);}
+  .btn-danger-ghost:hover:not(:disabled){background:var(--danger-soft);}
+  .btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
+  .btn svg{width:15px;height:15px;}
+
+  .spinner{
+    width:14px;height:14px;border-radius:50%;
+    border:2px solid rgba(0,0,0,.25);border-top-color:var(--accent-text);
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- Key / cipher output blocks ---------- */
+  .key-block{
+    position:relative;
+    background:#101217;
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    margin-top:8px;
+  }
+  .key-block textarea{
+    background:transparent;border:none;width:100%;
+    padding:14px 44px 14px 14px;
+    color:#c9cddb;
+    min-height:96px;
+    font-size:12px;
+  }
+  .key-block .copy-btn{
+    position:absolute;top:9px;right:9px;
+    background:var(--panel-raised);
+    border:1px solid var(--border);
+    border-radius:6px;
+    width:28px;height:28px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--text-dim);
+  }
+  .key-block .copy-btn:hover{color:var(--text);border-color:var(--text-faint);}
+  .key-block .copy-btn svg{width:14px;height:14px;}
+
+  .fingerprint{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text);
+    letter-spacing:0.03em;
+    word-spacing:6px;
+    background:var(--panel-raised);
+    border:1px solid var(--border-soft);
+    border-radius:7px;
+    padding:9px 12px;
+    line-height:1.7;
+  }
+
+  .warn-box{
+    display:flex;gap:10px;
+    background:var(--danger-soft);
+    border:1px solid #4a2a26;
+    color:#f0b3ad;
+    border-radius:7px;
+    padding:11px 13px;
+    font-size:12px;
+    line-height:1.6;
+    margin-top:10px;
+  }
+  .warn-box svg{width:15px;height:15px;flex:0 0 15px;margin-top:1px;color:var(--danger);}
+
+  /* ---------- Result / status ---------- */
+  .result-card{
+    border:1px solid var(--border);
+    background:var(--panel-raised);
+    border-radius:9px;
+    padding:18px;
+    margin-top:16px;
+  }
+  .result-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .result-head h3{font-size:14.5px;margin:0;font-weight:600;}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:600;
+    padding:4px 10px;border-radius:20px;
+  }
+  .badge svg{width:13px;height:13px;}
+  .badge-success{background:var(--success-soft);color:var(--success);}
+  .badge-danger{background:var(--danger-soft);color:var(--danger);}
+  .badge-neutral{background:var(--panel);color:var(--text-dim);border:1px solid var(--border);}
+
+  /* ---------- Identity / contact cards ---------- */
+  .card-grid{display:flex;flex-direction:column;gap:10px;}
+  .id-card{
+    display:flex;align-items:center;gap:13px;
+    background:var(--panel-raised);
+    border:1px solid var(--border-soft);
+    border-radius:9px;
+    padding:13px 14px;
+  }
+  .id-avatar{
+    width:36px;height:36px;flex:0 0 36px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-weight:600;font-size:13px;
+    background:var(--accent-soft);color:var(--accent);
+  }
+  .id-avatar.contact{background:#232a30;color:#7fb8c9;}
+  .id-info{min-width:0;flex:1;}
+  .id-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .id-meta{font-size:11.5px;color:var(--text-faint);font-family:var(--mono);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .id-actions{display:flex;gap:6px;flex:0 0 auto;}
+  .icon-btn{
+    background:transparent;border:1px solid var(--border);color:var(--text-dim);
+    width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .icon-btn:hover{color:var(--text);background:var(--panel);}
+  .icon-btn svg{width:14px;height:14px;}
+
+  .empty-state{
+    text-align:center;padding:34px 20px;color:var(--text-faint);
+    border:1px dashed var(--border);border-radius:9px;
+    font-size:13px;line-height:1.6;
+  }
+
+  .col-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:860px){.col-2{grid-template-columns:1fr;}}
+
+  /* ---------- Toasts ---------- */
+  .toast-wrap{
+    position:fixed;bottom:22px;right:22px;
+    display:flex;flex-direction:column;gap:8px;z-index:50;
+  }
+  .toast{
+    background:#22242c;border:1px solid var(--border);
+    color:var(--text);font-size:13px;
+    padding:11px 15px;border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+    display:flex;align-items:center;gap:9px;
+    animation:toastIn .18s ease;
+    max-width:320px;
+  }
+  .toast.error{border-color:#4a2a26;}
+  .toast svg{width:15px;height:15px;flex:0 0 15px;}
+  .toast.ok svg{color:var(--success);}
+  .toast.error svg{color:var(--danger);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- Mobile rail ---------- */
+  @media (max-width:760px){
+    .app{flex-direction:column;}
+    .rail{
+      width:100%;flex:none;height:auto;position:relative;
+      flex-direction:row;align-items:center;padding:14px 14px;
+      overflow-x:auto;
+    }
+    .brand{padding:0 14px 0 0;flex:0 0 auto;}
+    nav{flex-direction:row;margin-top:0;}
+    .nav-item{white-space:nowrap;}
+    .rail-footer{display:none;}
+    main{padding:26px 18px 60px 18px;}
+    .row-2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div id="lib-banner" class="lib-banner" style="display:none;">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+  <span id="lib-banner-text">Loading the encryption library…</span>
+  <button id="lib-banner-retry" class="btn btn-ghost" style="display:none;">Retry</button>
+</div>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5 20.5 9.5 9.5 20.5 3.5 20.5 3.5 14.5Z"/><path d="M13 5 19 11"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">CipherForge</div>
+        <div class="brand-sub">OpenPGP trust platform</div>
+      </div>
+    </div>
+
+    <nav>
+      <button class="nav-item active" data-view="forge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6"/><circle cx="12" cy="13" r="7"/><path d="M9.5 13a2.5 2.5 0 0 1 5 0"/></svg>
+        Forge Keys
+      </button>
+      <button class="nav-item" data-view="seal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        Seal &amp; Sign
+      </button>
+      <button class="nav-item" data-view="open">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.2-2.4"/><path d="m10 15 1.6 1.6L15 13"/></svg>
+        Open &amp; Verify
+      </button>
+      <button class="nav-item" data-view="vault">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M12 4v2M12 18v2"/></svg>
+        Vault
+        <span class="nav-count" id="vault-count">0</span>
+      </button>
+    </nav>
+
+    <div class="rail-footer">
+      <div class="status-line"><span class="dot"></span>Session-only storage</div>
+      <p>Keys and messages stay in this browser tab's memory. Nothing is uploaded, and everything is cleared on reload.</p>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- FORGE KEYS -->
+    <section class="view active" id="view-forge">
+      <div class="view-head">
+        <p class="eyebrow-free">Step 1</p>
+        <h1>Forge a key pair</h1>
+        <p class="view-desc">Every identity in CipherForge is an OpenPGP key pair: a public key you hand out freely, and a private key that stays with you. Generate one for yourself, or for anyone you want to role-play as while testing.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">New identity</div>
+        <form id="forge-form">
+          <div class="row-2">
+            <div class="field">
+              <label for="forge-name">Name</label>
+              <input type="text" id="forge-name" placeholder="Dhevshri J" required>
+            </div>
+            <div class="field">
+              <label for="forge-email">Email</label>
+              <input type="email" id="forge-email" placeholder="dhevshri@example.com" required>
+            </div>
+          </div>
+          <div class="row-2">
+            <div class="field">
+              <label for="forge-pass">Passphrase</label>
+              <input type="password" id="forge-pass" placeholder="Protects the private key at rest" required minlength="4">
+            </div>
+            <div class="field">
+              <label for="forge-pass2">Confirm passphrase</label>
+              <input type="password" id="forge-pass2" placeholder="Repeat passphrase" required minlength="4">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary" id="forge-submit" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6"/><circle cx="12" cy="13" r="7"/><path d="M9.5 13a2.5 2.5 0 0 1 5 0"/></svg>
+              Forge key pair
+            </button>
+          </div>
+        </form>
+
+        <div id="forge-result"></div>
+      </div>
+
+      <div class="panel" id="forge-identities-panel">
+        <div class="panel-title">Identities forged this session</div>
+        <div id="forge-identities-list"><div class="empty-state">No identities yet. Forge your first key pair above.</div></div>
+      </div>
+    </section>
+
+    <!-- SEAL & SIGN -->
+    <section class="view" id="view-seal">
+      <div class="view-head">
+        <p class="eyebrow-free">Step 2</p>
+        <h1>Seal &amp; sign a message</h1>
+        <p class="view-desc">Encrypting with the recipient's public key gives confidentiality — only their private key can open it. Signing with your own private key gives authentication and non-repudiation — they know it came from you, and you can't later deny sending it.</p>
+      </div>
+
+      <div class="panel">
+        <div class="field">
+          <label for="seal-from">Sign as (optional)</label>
+          <select id="seal-from">
+            <option value="">Don't sign — send anonymously</option>
+          </select>
+          <p class="hint">Signing proves authorship. Skipping it still keeps the message confidential, just not attributable.</p>
+        </div>
+
+        <div class="field" id="seal-pass-field" style="display:none;">
+          <label for="seal-pass">Your passphrase</label>
+          <input type="password" id="seal-pass" placeholder="Unlocks your private key to sign">
+        </div>
+
+        <div class="field">
+          <label for="seal-to">Recipient's public key</label>
+          <select id="seal-to">
+            <option value="">Select from vault…</option>
+          </select>
+          <div id="seal-to-paste" style="display:none;margin-top:8px;">
+            <textarea id="seal-to-armored" rows="5" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"></textarea>
+          </div>
+          <p class="hint"><button type="button" class="toggle-link" id="seal-to-toggle">Paste a public key instead</button></p>
+        </div>
+
+        <div class="field">
+          <label for="seal-message">Message</label>
+          <textarea id="seal-message" rows="6" style="font-family:var(--sans);font-size:13.5px;" placeholder="Write what you want to send…"></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="seal-submit" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            Seal message
+          </button>
+        </div>
+
+        <div id="seal-result"></div>
+      </div>
+    </section>
+
+    <!-- OPEN & VERIFY -->
+    <section class="view" id="view-open">
+      <div class="view-head">
+        <p class="eyebrow-free">Step 3</p>
+        <h1>Open &amp; verify a message</h1>
+        <p class="view-desc">Decrypting proves nothing about who sent a message — only your private key and passphrase are needed for that. Add the sender's public key too, and CipherForge checks whether their signature actually matches, catching tampering or impersonation.</p>
+      </div>
+
+      <div class="panel">
+        <div class="field">
+          <label for="open-cipher">Sealed message</label>
+          <textarea id="open-cipher" rows="7" placeholder="-----BEGIN PGP MESSAGE-----"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="open-with">Decrypt with</label>
+          <select id="open-with">
+            <option value="">Select your identity…</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="open-pass">Your passphrase</label>
+          <input type="password" id="open-pass" placeholder="Unlocks the private key above">
+        </div>
+
+        <div class="field">
+          <label for="open-verify">Verify sender (optional)</label>
+          <select id="open-verify">
+            <option value="">Skip verification</option>
+          </select>
+          <div id="open-verify-paste" style="display:none;margin-top:8px;">
+            <textarea id="open-verify-armored" rows="5" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"></textarea>
+          </div>
+          <p class="hint"><button type="button" class="toggle-link" id="open-verify-toggle">Paste a public key instead</button></p>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="open-submit" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.2-2.4"/><path d="m10 15 1.6 1.6L15 13"/></svg>
+            Open message
+          </button>
+        </div>
+
+        <div id="open-result"></div>
+      </div>
+    </section>
+
+    <!-- VAULT -->
+    <section class="view" id="view-vault">
+      <div class="view-head">
+        <p class="eyebrow-free">Reference</p>
+        <h1>Key vault</h1>
+        <p class="view-desc">Your identities carry a private key and can sign or decrypt. Contacts are public-key-only entries you've added, so you can encrypt to them or verify their signatures.</p>
+      </div>
+
+      <div class="col-2">
+        <div class="panel">
+          <div class="panel-title">Your identities</div>
+          <div id="vault-identities" class="card-grid"><div class="empty-state">None yet — forge one to get started.</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Contacts</div>
+          <div id="vault-contacts" class="card-grid"><div class="empty-state">No contacts added.</div></div>
+
+          <div style="margin-top:18px;border-top:1px solid var(--border-soft);padding-top:16px;">
+            <div class="section-label">Add a contact's public key</div>
+            <div class="field">
+              <label for="contact-label">Label</label>
+              <input type="text" id="contact-label" placeholder="Leave blank to use the key's own name">
+            </div>
+            <div class="field">
+              <label for="contact-armored">Public key</label>
+              <textarea id="contact-armored" rows="5" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"></textarea>
+            </div>
+            <div class="btn-row" style="margin-top:10px;">
+              <button class="btn btn-ghost" id="contact-add">Add to vault</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CDN_SOURCES = [
+    "https://cdnjs.cloudflare.com/ajax/libs/openpgp/5.11.2/openpgp.min.js",
+    "https://cdn.jsdelivr.net/npm/openpgp@5.11.2/dist/openpgp.min.js",
+    "https://unpkg.com/openpgp@5.11.2/dist/openpgp.min.js"
+  ];
+  var PRIMARY_BUTTON_IDS = ["forge-submit", "seal-submit", "open-submit"];
+
+  function loadScriptOnce(url, timeoutMs){
+    return new Promise(function(resolve, reject){
+      var settled = false;
+      var el = document.createElement("script");
+      var timer = setTimeout(function(){
+        if(settled) return;
+        settled = true;
+        el.remove();
+        reject(new Error("timed out loading " + url));
+      }, timeoutMs || 8000);
+      el.src = url;
+      el.onload = function(){
+        if(settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      el.onerror = function(){
+        if(settled) return;
+        settled = true;
+        clearTimeout(timer);
+        el.remove();
+        reject(new Error("failed to load " + url));
+      };
+      document.head.appendChild(el);
+    });
+  }
+
+  function setPrimaryButtonsDisabled(disabled){
+    PRIMARY_BUTTON_IDS.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.disabled = disabled;
+    });
+  }
+
+  function setBanner(text, isError, showRetry){
+    var banner = document.getElementById("lib-banner");
+    var textEl = document.getElementById("lib-banner-text");
+    var retryEl = document.getElementById("lib-banner-retry");
+    banner.style.display = "flex";
+    banner.classList.toggle("error", !!isError);
+    textEl.textContent = text;
+    retryEl.style.display = showRetry ? "inline-flex" : "none";
+  }
+
+  function hideBanner(){
+    document.getElementById("lib-banner").style.display = "none";
+  }
+
+  async function loadCryptoLibrary(){
+    setPrimaryButtonsDisabled(true);
+    setBanner("Loading the encryption library…", false, false);
+
+    if(window.openpgp){
+      hideBanner();
+      setPrimaryButtonsDisabled(false);
+      return;
+    }
+
+    for(var i = 0; i < CDN_SOURCES.length; i++){
+      try{
+        await loadScriptOnce(CDN_SOURCES[i]);
+        if(window.openpgp){
+          hideBanner();
+          setPrimaryButtonsDisabled(false);
+          return;
+        }
+      }catch(e){ /* fall through to the next source */ }
+    }
+
+    setBanner(
+      "Couldn't load the encryption library — check your internet connection. If you're on a school or office network, it may be blocking cdnjs.cloudflare.com, jsdelivr.net or unpkg.com; try a different network, or disable any ad-blocker or firewall extension for this page.",
+      true,
+      true
+    );
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    var retryBtn = document.getElementById("lib-banner-retry");
+    retryBtn.addEventListener("click", function(){
+      retryBtn.disabled = true;
+      loadCryptoLibrary().finally(function(){ retryBtn.disabled = false; });
+    });
+    loadCryptoLibrary();
+  });
+})();
+</script>
+
+<script>
+(function(){
+  "use strict";
+
+  const state = {
+    identities: [], // {id, name, email, fingerprint, publicKeyArmored, privateKeyArmored}
+    contacts: []    // {id, name, email, fingerprint, publicKeyArmored}
+  };
+  let uidCounter = 1;
+  const nextId = () => "k" + (uidCounter++);
+
+  // ---------- utilities ----------
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function $all(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+
+  function toast(message, type){
+    const wrap = $("#toast-wrap");
+    const el = document.createElement("div");
+    el.className = "toast " + (type === "error" ? "error" : "ok");
+    const icon = type === "error"
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    el.innerHTML = icon + "<span>" + message + "</span>";
+    wrap.appendChild(el);
+    setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .25s"; setTimeout(()=>el.remove(), 260); }, 3200);
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function formatFingerprint(fp){
+    const clean = fp.toUpperCase().replace(/\s+/g,"");
+    return clean.match(/.{1,4}/g).join(" ");
+  }
+
+  function initials(name){
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if(parts.length === 0) return "?";
+    if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  async function copyToClipboard(text, label){
+    try{
+      await navigator.clipboard.writeText(text);
+      toast((label || "Copied") + " to clipboard");
+    }catch(e){
+      toast("Couldn't copy — select and copy manually", "error");
+    }
+  }
+
+  function downloadText(filename, text){
+    const blob = new Blob([text], {type:"text/plain"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function copyButton(getText, label){
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "copy-btn";
+    btn.title = "Copy";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+    btn.addEventListener("click", ()=>copyToClipboard(getText(), label));
+    return btn;
+  }
+
+  // ---------- navigation ----------
+  $all(".nav-item").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      $all(".nav-item").forEach(b=>b.classList.remove("active"));
+      $all(".view").forEach(v=>v.classList.remove("active"));
+      btn.classList.add("active");
+      $("#view-" + btn.dataset.view).classList.add("active");
+      if(btn.dataset.view === "vault") renderVault();
+      if(btn.dataset.view === "seal" || btn.dataset.view === "open") refreshSelectors();
+    });
+  });
+
+  // ---------- render: identities forged panel ----------
+  function renderForgeList(){
+    const list = $("#forge-identities-list");
+    if(state.identities.length === 0){
+      list.innerHTML = '<div class="empty-state">No identities yet. Forge your first key pair above.</div>';
+      return;
+    }
+    list.innerHTML = "";
+    state.identities.slice().reverse().forEach(id=>{
+      const row = document.createElement("div");
+      row.className = "id-card";
+      row.style.marginBottom = "10px";
+      row.innerHTML =
+        '<div class="id-avatar">' + escapeHtml(initials(id.name)) + '</div>' +
+        '<div class="id-info">' +
+          '<div class="id-name">' + escapeHtml(id.name) + ' &lt;' + escapeHtml(id.email) + '&gt;</div>' +
+          '<div class="id-meta">' + formatFingerprint(id.fingerprint) + '</div>' +
+        '</div>';
+      list.appendChild(row);
+    });
+  }
+
+  // ---------- render: vault ----------
+  function renderVault(){
+    $("#vault-count").textContent = String(state.identities.length + state.contacts.length);
+
+    const idWrap = $("#vault-identities");
+    if(state.identities.length === 0){
+      idWrap.innerHTML = '<div class="empty-state">None yet — forge one to get started.</div>';
+    }else{
+      idWrap.innerHTML = "";
+      state.identities.forEach(id=>{
+        idWrap.appendChild(buildIdCard(id, false));
+      });
+    }
+
+    const cWrap = $("#vault-contacts");
+    if(state.contacts.length === 0){
+      cWrap.innerHTML = '<div class="empty-state">No contacts added.</div>';
+    }else{
+      cWrap.innerHTML = "";
+      state.contacts.forEach(c=>{
+        cWrap.appendChild(buildIdCard(c, true));
+      });
+    }
+  }
+
+  function buildIdCard(entry, isContact){
+    const card = document.createElement("div");
+    card.className = "id-card";
+    const avatar = document.createElement("div");
+    avatar.className = "id-avatar" + (isContact ? " contact" : "");
+    avatar.textContent = initials(entry.name);
+    const info = document.createElement("div");
+    info.className = "id-info";
+    info.innerHTML =
+      '<div class="id-name">' + escapeHtml(entry.name) + (entry.email ? ' &lt;' + escapeHtml(entry.email) + '&gt;' : '') + '</div>' +
+      '<div class="id-meta">' + formatFingerprint(entry.fingerprint) + '</div>';
+    const actions = document.createElement("div");
+    actions.className = "id-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "icon-btn";
+    copyBtn.title = "Copy public key";
+    copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+    copyBtn.addEventListener("click", ()=>copyToClipboard(entry.publicKeyArmored, "Public key"));
+    actions.appendChild(copyBtn);
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "icon-btn";
+    removeBtn.title = "Remove";
+    removeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14"/></svg>';
+    removeBtn.addEventListener("click", ()=>{
+      if(isContact){
+        state.contacts = state.contacts.filter(c=>c.id!==entry.id);
+      }else{
+        state.identities = state.identities.filter(i=>i.id!==entry.id);
+      }
+      renderVault(); renderForgeList(); refreshSelectors();
+      toast("Removed " + entry.name);
+    });
+    actions.appendChild(removeBtn);
+
+    card.appendChild(avatar); card.appendChild(info); card.appendChild(actions);
+    return card;
+  }
+
+  // ---------- selectors on Seal / Open ----------
+  function refreshSelectors(){
+    const sealFrom = $("#seal-from");
+    const openWith = $("#open-with");
+    const sealTo = $("#seal-to");
+    const openVerify = $("#open-verify");
+
+    sealFrom.innerHTML = '<option value="">Don\'t sign — send anonymously</option>';
+    openWith.innerHTML = '<option value="">Select your identity…</option>';
+    state.identities.forEach(id=>{
+      const opt1 = document.createElement("option");
+      opt1.value = id.id; opt1.textContent = id.name + " <" + id.email + ">";
+      sealFrom.appendChild(opt1);
+      const opt2 = document.createElement("option");
+      opt2.value = id.id; opt2.textContent = id.name + " <" + id.email + ">";
+      openWith.appendChild(opt2);
+    });
+
+    sealTo.innerHTML = '<option value="">Select from vault…</option>';
+    openVerify.innerHTML = '<option value="">Skip verification</option>';
+    const allPublic = state.identities.concat(state.contacts);
+    allPublic.forEach(entry=>{
+      const opt1 = document.createElement("option");
+      opt1.value = entry.id; opt1.textContent = entry.name + (entry.email ? " <" + entry.email + ">" : "");
+      sealTo.appendChild(opt1);
+      const opt2 = document.createElement("option");
+      opt2.value = entry.id; opt2.textContent = entry.name + (entry.email ? " <" + entry.email + ">" : "");
+      openVerify.appendChild(opt2);
+    });
+  }
+
+  $("#seal-from").addEventListener("change", e=>{
+    $("#seal-pass-field").style.display = e.target.value ? "block" : "none";
+  });
+
+  $("#seal-to-toggle").addEventListener("click", ()=>{
+    const pasteWrap = $("#seal-to-paste");
+    const select = $("#seal-to");
+    const pasting = pasteWrap.style.display === "block";
+    pasteWrap.style.display = pasting ? "none" : "block";
+    select.style.display = pasting ? "block" : "none";
+    $("#seal-to-toggle").textContent = pasting ? "Paste a public key instead" : "Choose from vault instead";
+  });
+
+  $("#open-verify-toggle").addEventListener("click", ()=>{
+    const pasteWrap = $("#open-verify-paste");
+    const select = $("#open-verify");
+    const pasting = pasteWrap.style.display === "block";
+    pasteWrap.style.display = pasting ? "none" : "block";
+    select.style.display = pasting ? "block" : "none";
+    $("#open-verify-toggle").textContent = pasting ? "Paste a public key instead" : "Choose from vault instead";
+  });
+
+  // ---------- FORGE ----------
+  $("#forge-form").addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const name = $("#forge-name").value.trim();
+    const email = $("#forge-email").value.trim();
+    const pass = $("#forge-pass").value;
+    const pass2 = $("#forge-pass2").value;
+    const submitBtn = $("#forge-submit");
+
+    if(pass !== pass2){
+      toast("Passphrases don't match", "error");
+      return;
+    }
+    if(pass.length < 4){
+      toast("Passphrase is too short", "error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const originalHtml = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="spinner"></span> Forging…';
+
+    try{
+      const { privateKey, publicKey } = await openpgp.generateKey({
+        type: 'ecc',
+        curve: 'curve25519',
+        userIDs: [{ name, email }],
+        passphrase: pass,
+        format: 'armored'
+      });
+
+      const pubKeyObj = await openpgp.readKey({ armoredKey: publicKey });
+      const fingerprint = pubKeyObj.getFingerprint();
+
+      const entry = {
+        id: nextId(),
+        name, email, fingerprint,
+        publicKeyArmored: publicKey,
+        privateKeyArmored: privateKey
+      };
+      state.identities.push(entry);
+      renderForgeList();
+      refreshSelectors();
+
+      const result = $("#forge-result");
+      result.innerHTML = "";
+      const card = document.createElement("div");
+      card.className = "result-card";
+      card.innerHTML =
+        '<div class="result-head"><span class="badge badge-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Key pair forged</span><h3>' + escapeHtml(name) + '</h3></div>' +
+        '<div class="section-label">Fingerprint</div>' +
+        '<div class="fingerprint">' + formatFingerprint(fingerprint) + '</div>' +
+        '<div class="section-label" style="margin-top:16px;">Public key — share this freely</div>' +
+        '<div class="key-block"><textarea readonly rows="5">' + escapeHtml(publicKey) + '</textarea></div>' +
+        '<div class="section-label" style="margin-top:16px;">Private key — keep this secret</div>' +
+        '<div class="key-block"><textarea readonly rows="5">' + escapeHtml(privateKey) + '</textarea></div>' +
+        '<div class="warn-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>Anyone with this private key and your passphrase can read your messages and sign as you. It is kept in this browser tab&rsquo;s memory only — copy or download it somewhere safe, since reloading the page will lose it.</span></div>' +
+        '<div class="btn-row"></div>';
+
+      result.appendChild(card);
+
+      const btnRow = $(".btn-row", card);
+      const copyPub = document.createElement("button");
+      copyPub.className = "btn btn-ghost"; copyPub.type = "button";
+      copyPub.textContent = "Copy public key";
+      copyPub.addEventListener("click", ()=>copyToClipboard(publicKey, "Public key"));
+
+      const dlPub = document.createElement("button");
+      dlPub.className = "btn btn-ghost"; dlPub.type = "button";
+      dlPub.textContent = "Download public key";
+      dlPub.addEventListener("click", ()=>downloadText(name.replace(/\s+/g,"_")+"_public.asc", publicKey));
+
+      const copyPriv = document.createElement("button");
+      copyPriv.className = "btn btn-ghost"; copyPriv.type = "button";
+      copyPriv.textContent = "Copy private key";
+      copyPriv.addEventListener("click", ()=>copyToClipboard(privateKey, "Private key"));
+
+      const dlPriv = document.createElement("button");
+      dlPriv.className = "btn btn-ghost"; dlPriv.type = "button";
+      dlPriv.textContent = "Download private key";
+      dlPriv.addEventListener("click", ()=>downloadText(name.replace(/\s+/g,"_")+"_private.asc", privateKey));
+
+      [copyPub, dlPub, copyPriv, dlPriv].forEach(b=>btnRow.appendChild(b));
+
+      // attach copy buttons inside the key blocks too
+      $all(".key-block", card).forEach((block, i)=>{
+        const text = i === 0 ? publicKey : privateKey;
+        block.appendChild(copyButton(()=>text, i===0 ? "Public key" : "Private key"));
+      });
+
+      toast("Key pair forged for " + name);
+      $("#forge-form").reset();
+      $("#seal-pass-field").style.display = "none";
+
+    }catch(err){
+      console.error(err);
+      toast("Key generation failed: " + err.message, "error");
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalHtml;
+    }
+  });
+
+  // ---------- SEAL & SIGN ----------
+  $("#seal-submit").addEventListener("click", async ()=>{
+    const btn = $("#seal-submit");
+    const fromId = $("#seal-from").value;
+    const passphrase = $("#seal-pass").value;
+    const pasting = $("#seal-to-paste").style.display === "block";
+    const toId = $("#seal-to").value;
+    const toArmored = $("#seal-to-armored").value.trim();
+    const messageText = $("#seal-message").value;
+
+    if(!messageText.trim()){
+      toast("Write a message first", "error");
+      return;
+    }
+    let recipientArmored = "";
+    if(pasting){
+      if(!toArmored){ toast("Paste a recipient public key", "error"); return; }
+      recipientArmored = toArmored;
+    }else{
+      if(!toId){ toast("Choose a recipient", "error"); return; }
+      const entry = state.identities.concat(state.contacts).find(e=>e.id===toId);
+      recipientArmored = entry.publicKeyArmored;
+    }
+    if(fromId && !passphrase){
+      toast("Enter your passphrase to sign", "error");
+      return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Sealing…';
+
+    try{
+      const recipientKey = await openpgp.readKey({ armoredKey: recipientArmored });
+      const message = await openpgp.createMessage({ text: messageText });
+
+      const options = { message, encryptionKeys: recipientKey };
+      let signerName = null;
+
+      if(fromId){
+        const identity = state.identities.find(i=>i.id===fromId);
+        const privKeyObj = await openpgp.readPrivateKey({ armoredKey: identity.privateKeyArmored });
+        const decryptedPriv = await openpgp.decryptKey({ privateKey: privKeyObj, passphrase });
+        options.signingKeys = decryptedPriv;
+        signerName = identity.name;
+      }
+
+      const ciphertext = await openpgp.encrypt(options);
+
+      const result = $("#seal-result");
+      result.innerHTML = "";
+      const card = document.createElement("div");
+      card.className = "result-card";
+      card.innerHTML =
+        '<div class="result-head"><span class="badge badge-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sealed</span><h3>' +
+          (signerName ? "Signed by " + escapeHtml(signerName) : "Sent without a signature") +
+        '</h3></div>' +
+        '<div class="section-label">Ciphertext — send this to your recipient</div>' +
+        '<div class="key-block"><textarea readonly rows="8">' + escapeHtml(ciphertext) + '</textarea></div>' +
+        '<div class="btn-row"></div>';
+      result.appendChild(card);
+
+      $(".key-block", card).appendChild(copyButton(()=>ciphertext, "Sealed message"));
+      const btnRow = $(".btn-row", card);
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "btn btn-ghost"; copyBtn.type="button"; copyBtn.textContent = "Copy ciphertext";
+      copyBtn.addEventListener("click", ()=>copyToClipboard(ciphertext, "Ciphertext"));
+      const dlBtn = document.createElement("button");
+      dlBtn.className = "btn btn-ghost"; dlBtn.type="button"; dlBtn.textContent = "Download .asc";
+      dlBtn.addEventListener("click", ()=>downloadText("message.asc", ciphertext));
+      btnRow.appendChild(copyBtn); btnRow.appendChild(dlBtn);
+
+      toast("Message sealed");
+    }catch(err){
+      console.error(err);
+      let msg = err.message || "Something went wrong";
+      if(/passphrase/i.test(msg)) msg = "Incorrect passphrase for the signing key";
+      toast("Couldn't seal message: " + msg, "error");
+    }finally{
+      btn.disabled = false; btn.innerHTML = originalHtml;
+    }
+  });
+
+  // ---------- OPEN & VERIFY ----------
+  $("#open-submit").addEventListener("click", async ()=>{
+    const btn = $("#open-submit");
+    const ciphertext = $("#open-cipher").value.trim();
+    const withId = $("#open-with").value;
+    const passphrase = $("#open-pass").value;
+    const pasting = $("#open-verify-paste").style.display === "block";
+    const verifyId = $("#open-verify").value;
+    const verifyArmored = $("#open-verify-armored").value.trim();
+
+    if(!ciphertext){ toast("Paste a sealed message first", "error"); return; }
+    if(!withId){ toast("Choose which identity to decrypt with", "error"); return; }
+    if(!passphrase){ toast("Enter your passphrase", "error"); return; }
+
+    let senderArmored = "";
+    if(pasting){
+      senderArmored = verifyArmored;
+    }else if(verifyId){
+      const entry = state.identities.concat(state.contacts).find(e=>e.id===verifyId);
+      senderArmored = entry ? entry.publicKeyArmored : "";
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Opening…';
+
+    try{
+      const identity = state.identities.find(i=>i.id===withId);
+      const privKeyObj = await openpgp.readPrivateKey({ armoredKey: identity.privateKeyArmored });
+      const decryptedPriv = await openpgp.decryptKey({ privateKey: privKeyObj, passphrase });
+
+      const message = await openpgp.readMessage({ armoredMessage: ciphertext });
+
+      const decryptOptions = { message, decryptionKeys: decryptedPriv };
+      let senderKey = null;
+      if(senderArmored){
+        senderKey = await openpgp.readKey({ armoredKey: senderArmored });
+        decryptOptions.verificationKeys = senderKey;
+        decryptOptions.expectSigned = false;
+      }
+
+      const { data, signatures } = await openpgp.decrypt(decryptOptions);
+
+      let verificationBadge = '<span class="badge badge-neutral">Unsigned message</span>';
+      if(senderArmored){
+        if(signatures.length === 0){
+          verificationBadge = '<span class="badge badge-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>No signature found — not from this sender</span>';
+        }else{
+          try{
+            await signatures[0].verified;
+            verificationBadge = '<span class="badge badge-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Signature verified</span>';
+          }catch(e){
+            verificationBadge = '<span class="badge badge-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Signature does not match — possible tampering</span>';
+          }
+        }
+      }
+
+      const result = $("#open-result");
+      result.innerHTML = "";
+      const card = document.createElement("div");
+      card.className = "result-card";
+      card.innerHTML =
+        '<div class="result-head">' + verificationBadge + '</div>' +
+        '<div class="section-label">Decrypted message</div>' +
+        '<div class="key-block"><textarea readonly rows="6" style="font-family:var(--sans);color:var(--text);font-size:13.5px;">' + escapeHtml(data) + '</textarea></div>';
+      result.appendChild(card);
+      $(".key-block", card).appendChild(copyButton(()=>data, "Message"));
+
+      toast("Message opened");
+    }catch(err){
+      console.error(err);
+      let msg = err.message || "Something went wrong";
+      if(/passphrase/i.test(msg)) msg = "Incorrect passphrase";
+      else if(/session key|decrypt/i.test(msg)) msg = "This message wasn't sealed for this identity";
+      const result = $("#open-result");
+      result.innerHTML = '<div class="result-card"><div class="result-head"><span class="badge badge-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Couldn\'t open message</span></div><p style="font-size:13px;color:var(--text-dim);margin:0;">' + escapeHtml(msg) + '</p></div>';
+      toast("Couldn't open message", "error");
+    }finally{
+      btn.disabled = false; btn.innerHTML = originalHtml;
+    }
+  });
+
+  // ---------- VAULT: add contact ----------
+  $("#contact-add").addEventListener("click", async ()=>{
+    const label = $("#contact-label").value.trim();
+    const armored = $("#contact-armored").value.trim();
+    if(!armored){ toast("Paste a public key first", "error"); return; }
+
+    try{
+      const keyObj = await openpgp.readKey({ armoredKey: armored });
+      const fingerprint = keyObj.getFingerprint();
+      const userIds = keyObj.getUserIDs();
+      let name = label, email = "";
+      if(userIds.length){
+        const match = userIds[0].match(/^(.*?)\s*<(.+)>$/);
+        if(match){
+          if(!name) name = match[1].trim() || match[2];
+          email = match[2];
+        }else if(!name){
+          name = userIds[0];
+        }
+      }
+      if(!name) name = "Unnamed key";
+
+      if(state.identities.concat(state.contacts).some(e=>e.fingerprint===fingerprint)){
+        toast("That key is already in your vault", "error");
+        return;
+      }
+
+      state.contacts.push({ id: nextId(), name, email, fingerprint, publicKeyArmored: armored });
+      renderVault();
+      refreshSelectors();
+      $("#contact-label").value = "";
+      $("#contact-armored").value = "";
+      toast("Added " + name + " to vault");
+    }catch(err){
+      console.error(err);
+      toast("That doesn't look like a valid public key", "error");
+    }
+  });
+
+  // init
+  refreshSelectors();
+})();
+</script>
+</body>
+</html>
